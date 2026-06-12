@@ -386,8 +386,7 @@
         "signedInAs": "Connecté en tant que {accountId} — s'exécute avec votre session actuelle.",
         "notSignedIn": "Non connecté — la requête s'exécute sans session.",
         "parameters": "Paramètres de requête",
-        "paramName": "Paramètre",
-        "paramDescription": "Description",
+        "parametersDescription": "Remplissez les champs pour construire votre requête — les exemples de code ci-dessous se mettent à jour en direct. Les champs vides sont omis.",
         "required": "obligatoire",
         "params": {
             "accountId": "ID du compte de trésorerie (obligatoire)",
@@ -406,9 +405,6 @@
             "endDate": "N'inclure que l'activité jusqu'à cette date incluse (ISO 8601)"
         },
         "examples": "Exemples de code",
-        "limitLabel": "Limite",
-        "offsetLabel": "Décalage",
-        "transactionTypeLabel": "Type de transaction",
         "run": "Exécuter la requête",
         "running": "Exécution…",
         "response": "Réponse",

@@ -386,8 +386,7 @@
         "signedInAs": "{accountId} olarak oturum açıldı — mevcut oturumunuzla çalışır.",
         "notSignedIn": "Oturum açılmadı — istek oturum olmadan çalışır.",
         "parameters": "Sorgu parametreleri",
-        "paramName": "Parametre",
-        "paramDescription": "Açıklama",
+        "parametersDescription": "İsteğinizi oluşturmak için alanları doldurun — aşağıdaki kod örnekleri anlık olarak güncellenir. Boş alanlar atlanır.",
         "required": "zorunlu",
         "params": {
             "accountId": "Hazine hesap kimliği (zorunlu)",
@@ -406,9 +405,6 @@
             "endDate": "Yalnızca bu tarihte veya öncesindeki etkinliği dahil et (ISO 8601)"
         },
         "examples": "Kod örnekleri",
-        "limitLabel": "Limit",
-        "offsetLabel": "Ofset",
-        "transactionTypeLabel": "İşlem türü",
         "run": "İsteği çalıştır",
         "running": "Çalıştırılıyor…",
         "response": "Yanıt",

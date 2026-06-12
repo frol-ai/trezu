@@ -386,8 +386,7 @@
         "signedInAs": "Đã đăng nhập với tư cách {accountId} — chạy với phiên hiện tại của bạn.",
         "notSignedIn": "Chưa đăng nhập — yêu cầu chạy không có phiên.",
         "parameters": "Tham số truy vấn",
-        "paramName": "Tham số",
-        "paramDescription": "Mô tả",
+        "parametersDescription": "Điền vào các trường để xây dựng yêu cầu — các ví dụ mã bên dưới cập nhật trực tiếp. Các trường trống sẽ bị bỏ qua.",
         "required": "bắt buộc",
         "params": {
             "accountId": "ID tài khoản kho bạc (bắt buộc)",
@@ -406,9 +405,6 @@
             "endDate": "Chỉ bao gồm hoạt động vào hoặc trước ngày này (ISO 8601)"
         },
         "examples": "Ví dụ mã",
-        "limitLabel": "Giới hạn",
-        "offsetLabel": "Độ lệch",
-        "transactionTypeLabel": "Loại giao dịch",
         "run": "Chạy yêu cầu",
         "running": "Đang chạy…",
         "response": "Phản hồi",

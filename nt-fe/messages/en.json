@@ -386,8 +386,7 @@
         "signedInAs": "Signed in as {accountId} — runs with your current session.",
         "notSignedIn": "Not signed in — the request runs without a session.",
         "parameters": "Query parameters",
-        "paramName": "Parameter",
-        "paramDescription": "Description",
+        "parametersDescription": "Fill in the fields to build your request — the code examples below update live. Empty fields are omitted.",
         "required": "required",
         "params": {
             "accountId": "Treasury account ID (required)",
@@ -406,9 +405,6 @@
             "endDate": "Only include activity on or before this date (ISO 8601)"
         },
         "examples": "Code examples",
-        "limitLabel": "Limit",
-        "offsetLabel": "Offset",
-        "transactionTypeLabel": "Transaction type",
         "run": "Run request",
         "running": "Running…",
         "response": "Response",

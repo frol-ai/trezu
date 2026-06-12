@@ -386,8 +386,7 @@
         "signedInAs": "已以 {accountId} 登录——使用您当前的会话运行。",
         "notSignedIn": "未登录——请求将在无会话的情况下运行。",
         "parameters": "查询参数",
-        "paramName": "参数",
-        "paramDescription": "说明",
+        "parametersDescription": "填写字段以构建请求——下方代码示例会实时更新。空字段将被省略。",
         "required": "必填",
         "params": {
             "accountId": "金库账户 ID（必填）",
@@ -406,9 +405,6 @@
             "endDate": "仅包含此日期当天或之前的活动（ISO 8601）"
         },
         "examples": "代码示例",
-        "limitLabel": "数量",
-        "offsetLabel": "偏移量",
-        "transactionTypeLabel": "交易类型",
         "run": "运行请求",
         "running": "运行中…",
         "response": "响应",

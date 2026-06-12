@@ -386,8 +386,7 @@
         "signedInAs": "{accountId} としてサインイン中 — 現在のセッションで実行されます。",
         "notSignedIn": "未サインイン — リクエストはセッションなしで実行されます。",
         "parameters": "クエリパラメータ",
-        "paramName": "パラメータ",
-        "paramDescription": "説明",
+        "parametersDescription": "フィールドに入力してリクエストを作成します — 下のコード例はリアルタイムで更新されます。空のフィールドは省略されます。",
         "required": "必須",
         "params": {
             "accountId": "トレジャリーアカウントID（必須）",
@@ -406,9 +405,6 @@
             "endDate": "この日付以前のアクティビティのみを含める（ISO 8601）"
         },
         "examples": "コード例",
-        "limitLabel": "件数",
-        "offsetLabel": "オフセット",
-        "transactionTypeLabel": "トランザクションタイプ",
         "run": "リクエストを実行",
         "running": "実行中…",
         "response": "レスポンス",

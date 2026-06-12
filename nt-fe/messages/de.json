@@ -386,8 +386,7 @@
         "signedInAs": "Angemeldet als {accountId} — wird mit Ihrer aktuellen Sitzung ausgeführt.",
         "notSignedIn": "Nicht angemeldet — die Anfrage wird ohne Sitzung ausgeführt.",
         "parameters": "Abfrageparameter",
-        "paramName": "Parameter",
-        "paramDescription": "Beschreibung",
+        "parametersDescription": "Füllen Sie die Felder aus, um Ihre Anfrage zu erstellen — die Codebeispiele unten werden live aktualisiert. Leere Felder werden weggelassen.",
         "required": "erforderlich",
         "params": {
             "accountId": "Treasury-Konto-ID (erforderlich)",
@@ -406,9 +405,6 @@
             "endDate": "Nur Aktivitäten an oder vor diesem Datum einschließen (ISO 8601)"
         },
         "examples": "Codebeispiele",
-        "limitLabel": "Limit",
-        "offsetLabel": "Offset",
-        "transactionTypeLabel": "Transaktionstyp",
         "run": "Anfrage ausführen",
         "running": "Wird ausgeführt…",
         "response": "Antwort",

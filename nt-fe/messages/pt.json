@@ -386,8 +386,7 @@
         "signedInAs": "Conectado como {accountId} — executa com sua sessão atual.",
         "notSignedIn": "Não conectado — a solicitação é executada sem sessão.",
         "parameters": "Parâmetros de consulta",
-        "paramName": "Parâmetro",
-        "paramDescription": "Descrição",
+        "parametersDescription": "Preencha os campos para montar sua solicitação — os exemplos de código abaixo são atualizados ao vivo. Campos vazios são omitidos.",
         "required": "obrigatório",
         "params": {
             "accountId": "ID da conta de tesouraria (obrigatório)",
@@ -406,9 +405,6 @@
             "endDate": "Incluir apenas atividade nesta data ou antes (ISO 8601)"
         },
         "examples": "Exemplos de código",
-        "limitLabel": "Limite",
-        "offsetLabel": "Deslocamento",
-        "transactionTypeLabel": "Tipo de transação",
         "run": "Executar solicitação",
         "running": "Executando…",
         "response": "Resposta",

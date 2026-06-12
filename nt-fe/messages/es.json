@@ -386,8 +386,7 @@
         "signedInAs": "Sesión iniciada como {accountId} — se ejecuta con tu sesión actual.",
         "notSignedIn": "Sin sesión iniciada — la solicitud se ejecuta sin sesión.",
         "parameters": "Parámetros de consulta",
-        "paramName": "Parámetro",
-        "paramDescription": "Descripción",
+        "parametersDescription": "Rellena los campos para construir tu solicitud — los ejemplos de código de abajo se actualizan en vivo. Los campos vacíos se omiten.",
         "required": "obligatorio",
         "params": {
             "accountId": "ID de la cuenta de tesorería (obligatorio)",
@@ -406,9 +405,6 @@
             "endDate": "Incluir solo actividad en o antes de esta fecha (ISO 8601)"
         },
         "examples": "Ejemplos de código",
-        "limitLabel": "Límite",
-        "offsetLabel": "Desplazamiento",
-        "transactionTypeLabel": "Tipo de transacción",
         "run": "Ejecutar solicitud",
         "running": "Ejecutando…",
         "response": "Respuesta",

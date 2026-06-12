@@ -386,8 +386,7 @@
         "signedInAs": "Masuk sebagai {accountId} — berjalan dengan sesi Anda saat ini.",
         "notSignedIn": "Belum masuk — permintaan berjalan tanpa sesi.",
         "parameters": "Parameter kueri",
-        "paramName": "Parameter",
-        "paramDescription": "Deskripsi",
+        "parametersDescription": "Isi kolom untuk membangun permintaan Anda — contoh kode di bawah diperbarui secara langsung. Kolom kosong diabaikan.",
         "required": "wajib",
         "params": {
             "accountId": "ID akun treasury (wajib)",
@@ -406,9 +405,6 @@
             "endDate": "Hanya sertakan aktivitas pada atau sebelum tanggal ini (ISO 8601)"
         },
         "examples": "Contoh kode",
-        "limitLabel": "Batas",
-        "offsetLabel": "Offset",
-        "transactionTypeLabel": "Tipe transaksi",
         "run": "Jalankan permintaan",
         "running": "Menjalankan…",
         "response": "Respons",

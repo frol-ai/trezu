@@ -9,14 +9,6 @@ import { CopyButton } from "@/components/copy-button";
 import { Input } from "@/components/input";
 import { PageComponentLayout } from "@/components/page-component-layout";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/table";
-import {
     Select,
     SelectContent,
     SelectItem,
@@ -37,14 +29,33 @@ const BACKEND_API_BASE = process.env.NEXT_PUBLIC_BACKEND_API_BASE || "";
 const AUTH_COOKIE_NAME = "auth_token";
 const JWT_PLACEHOLDER = "YOUR_JWT";
 
-type TransactionType =
-    | "all"
-    | "incoming"
-    | "outgoing"
-    | "staking_rewards"
-    | "exchange";
+interface ParamDef {
+    key: string;
+    kind: "text" | "number" | "select" | "date";
+    required?: boolean;
+    placeholder?: string;
+    min?: number;
+    max?: number;
+}
 
-const TRANSACTION_TYPES: { value: TransactionType; labelKey: string }[] = [
+const PARAM_DEFS: ParamDef[] = [
+    { key: "accountId", kind: "text", required: true },
+    { key: "limit", kind: "number", min: 1, max: 100 },
+    { key: "offset", kind: "number", min: 0 },
+    { key: "minUsdValue", kind: "number", min: 0 },
+    { key: "transactionType", kind: "select" },
+    { key: "tokenSymbol", kind: "text", placeholder: "USDC" },
+    { key: "tokenSymbolNot", kind: "text", placeholder: "USDC" },
+    { key: "txHash", kind: "text" },
+    { key: "from", kind: "text", placeholder: "alice.near,bob.near" },
+    { key: "fromNot", kind: "text", placeholder: "alice.near,bob.near" },
+    { key: "to", kind: "text", placeholder: "alice.near,bob.near" },
+    { key: "toNot", kind: "text", placeholder: "alice.near,bob.near" },
+    { key: "startDate", kind: "date" },
+    { key: "endDate", kind: "date" },
+];
+
+const TRANSACTION_TYPES: { value: string; labelKey: string }[] = [
     { value: "all", labelKey: "all" },
     { value: "outgoing", labelKey: "sent" },
     { value: "incoming", labelKey: "received" },
@@ -52,22 +63,7 @@ const TRANSACTION_TYPES: { value: TransactionType; labelKey: string }[] = [
     { value: "exchange", labelKey: "exchange" },
 ];
 
-const QUERY_PARAMS = [
-    "accountId",
-    "limit",
-    "offset",
-    "minUsdValue",
-    "transactionType",
-    "tokenSymbol",
-    "tokenSymbolNot",
-    "txHash",
-    "from",
-    "fromNot",
-    "to",
-    "toNot",
-    "startDate",
-    "endDate",
-] as const;
+const NUMERIC_PARAMS = new Set(["limit", "offset", "minUsdValue"]);
 
 function CodeBlock({ code, copyLabel }: { code: string; copyLabel: string }) {
     return (
@@ -93,10 +89,12 @@ export default function ApiDocsPage() {
     const { treasuryId } = useTreasury();
     const { accountId } = useNear();
 
-    const [limit, setLimit] = useState(10);
-    const [offset, setOffset] = useState(0);
-    const [transactionType, setTransactionType] =
-        useState<TransactionType>("all");
+    const [values, setValues] = useState<Record<string, string>>(() => ({
+        accountId: treasuryId ?? "",
+        limit: "10",
+        offset: "0",
+        transactionType: "all",
+    }));
     const [isRunning, setIsRunning] = useState(false);
     const [response, setResponse] = useState<string | null>(null);
     const [responseMeta, setResponseMeta] = useState<{
@@ -105,19 +103,21 @@ export default function ApiDocsPage() {
         duration: number;
     } | null>(null);
 
-    const queryParams = useMemo(() => {
-        const params = new URLSearchParams({
-            accountId: treasuryId ?? "treasury.sputnik-dao.near",
-            limit: String(limit),
-            offset: String(offset),
-        });
-        if (transactionType !== "all") {
-            params.set("transactionType", transactionType);
-        }
-        return params;
-    }, [treasuryId, limit, offset, transactionType]);
+    const setParam = (key: string, value: string) =>
+        setValues((prev) => ({ ...prev, [key]: value }));
 
-    const requestUrl = `${BACKEND_API_BASE}/api/recent-activity?${queryParams.toString()}`;
+    const activeParams = useMemo(() => {
+        const entries: [string, string][] = [];
+        for (const def of PARAM_DEFS) {
+            const raw = (values[def.key] ?? "").trim();
+            if (!raw) continue;
+            if (def.key === "transactionType" && raw === "all") continue;
+            entries.push([def.key, raw]);
+        }
+        return entries;
+    }, [values]);
+
+    const requestUrl = `${BACKEND_API_BASE}/api/recent-activity?${new URLSearchParams(activeParams).toString()}`;
 
     const curlSnippet = useMemo(
         () =>
@@ -129,14 +129,11 @@ export default function ApiDocsPage() {
     );
 
     const pythonSnippet = useMemo(() => {
-        const paramLines = [
-            `        "accountId": "${treasuryId ?? "treasury.sputnik-dao.near"}",`,
-            `        "limit": ${limit},`,
-            `        "offset": ${offset},`,
-        ];
-        if (transactionType !== "all") {
-            paramLines.push(`        "transactionType": "${transactionType}",`);
-        }
+        const paramLines = activeParams.map(([key, value]) =>
+            NUMERIC_PARAMS.has(key) && !Number.isNaN(Number(value))
+                ? `        "${key}": ${value},`
+                : `        "${key}": ${JSON.stringify(value)},`,
+        );
         return [
             "import requests",
             "",
@@ -157,7 +154,7 @@ export default function ApiDocsPage() {
             '    symbol = item["tokenMetadata"]["symbol"]',
             '    print(item["blockTime"], item["amount"], symbol, item["counterparty"])',
         ].join("\n");
-    }, [treasuryId, limit, offset, transactionType]);
+    }, [activeParams]);
 
     const handleRun = async () => {
         setIsRunning(true);
@@ -228,126 +225,75 @@ export default function ApiDocsPage() {
                 </PageCard>
 
                 {/* Query parameters */}
-                <PageCard className="gap-3">
-                    <p className="font-semibold">{tDocs("parameters")}</p>
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="hover:bg-transparent">
-                                <TableHead className="text-xs font-medium uppercase text-muted-foreground w-44">
-                                    {tDocs("paramName")}
-                                </TableHead>
-                                <TableHead className="text-xs font-medium uppercase text-muted-foreground">
-                                    {tDocs("paramDescription")}
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {QUERY_PARAMS.map((param) => (
-                                <TableRow key={param}>
-                                    <TableCell className="align-top">
-                                        <code className="text-sm">{param}</code>
-                                        {param === "accountId" && (
-                                            <span className="ml-2 text-xs text-muted-foreground border border-general-border rounded px-1.5 py-0.5">
-                                                {tDocs("required")}
-                                            </span>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="text-sm whitespace-normal">
-                                        {tDocs(`params.${param}`)}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                <PageCard className="gap-4">
+                    <div className="flex flex-col gap-1">
+                        <p className="font-semibold">{tDocs("parameters")}</p>
+                        <p className="text-sm text-muted-foreground">
+                            {tDocs("parametersDescription")}
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                        {PARAM_DEFS.map((def) => (
+                            <div key={def.key} className="flex flex-col gap-1">
+                                <label
+                                    className="text-sm font-medium flex items-center gap-2"
+                                    htmlFor={`api-docs-${def.key}`}
+                                >
+                                    <code>{def.key}</code>
+                                    {def.required && (
+                                        <span className="text-xs font-normal text-muted-foreground border border-general-border rounded px-1.5 py-0.5">
+                                            {tDocs("required")}
+                                        </span>
+                                    )}
+                                </label>
+                                <p className="text-xs text-muted-foreground">
+                                    {tDocs(`params.${def.key}`)}
+                                </p>
+                                {def.kind === "select" ? (
+                                    <Select
+                                        value={values[def.key]?.trim() || "all"}
+                                        onValueChange={(value) =>
+                                            setParam(def.key, value)
+                                        }
+                                    >
+                                        <SelectTrigger
+                                            id={`api-docs-${def.key}`}
+                                            className="w-full"
+                                        >
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {TRANSACTION_TYPES.map((type) => (
+                                                <SelectItem
+                                                    key={type.value}
+                                                    value={type.value}
+                                                >
+                                                    {tTabs(type.labelKey)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                ) : (
+                                    <Input
+                                        id={`api-docs-${def.key}`}
+                                        type={def.kind}
+                                        min={def.min}
+                                        max={def.max}
+                                        placeholder={def.placeholder}
+                                        value={values[def.key] ?? ""}
+                                        onChange={(e) =>
+                                            setParam(def.key, e.target.value)
+                                        }
+                                    />
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </PageCard>
 
-                {/* Request builder + code examples */}
+                {/* Code examples + runner */}
                 <PageCard className="gap-4">
                     <p className="font-semibold">{tDocs("examples")}</p>
-                    <div className="flex flex-wrap gap-4">
-                        <div className="flex flex-col gap-1.5 w-28">
-                            <label
-                                className="text-sm font-medium"
-                                htmlFor="api-docs-limit"
-                            >
-                                {tDocs("limitLabel")}
-                            </label>
-                            <Input
-                                id="api-docs-limit"
-                                type="number"
-                                min={1}
-                                max={100}
-                                value={limit}
-                                onChange={(e) =>
-                                    setLimit(
-                                        Math.max(
-                                            1,
-                                            Math.min(
-                                                100,
-                                                parseInt(
-                                                    e.target.value || "1",
-                                                    10,
-                                                ),
-                                            ),
-                                        ),
-                                    )
-                                }
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1.5 w-28">
-                            <label
-                                className="text-sm font-medium"
-                                htmlFor="api-docs-offset"
-                            >
-                                {tDocs("offsetLabel")}
-                            </label>
-                            <Input
-                                id="api-docs-offset"
-                                type="number"
-                                min={0}
-                                value={offset}
-                                onChange={(e) =>
-                                    setOffset(
-                                        Math.max(
-                                            0,
-                                            parseInt(e.target.value || "0", 10),
-                                        ),
-                                    )
-                                }
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1.5 w-48">
-                            <label
-                                className="text-sm font-medium"
-                                htmlFor="api-docs-transaction-type"
-                            >
-                                {tDocs("transactionTypeLabel")}
-                            </label>
-                            <Select
-                                value={transactionType}
-                                onValueChange={(value) =>
-                                    setTransactionType(value as TransactionType)
-                                }
-                            >
-                                <SelectTrigger
-                                    id="api-docs-transaction-type"
-                                    className="w-full"
-                                >
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {TRANSACTION_TYPES.map((type) => (
-                                        <SelectItem
-                                            key={type.value}
-                                            value={type.value}
-                                        >
-                                            {tTabs(type.labelKey)}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
 
                     <Tabs defaultValue="curl">
                         <TabsList>
@@ -369,7 +315,10 @@ export default function ApiDocsPage() {
                     </Tabs>
 
                     <div className="flex flex-wrap items-center gap-3">
-                        <Button onClick={handleRun} disabled={isRunning}>
+                        <Button
+                            onClick={handleRun}
+                            disabled={isRunning || !values.accountId?.trim()}
+                        >
                             {isRunning ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
