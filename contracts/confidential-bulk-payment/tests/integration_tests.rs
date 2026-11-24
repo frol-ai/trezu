@@ -613,6 +613,16 @@ async fn test_activate_rejects_too_many_hashes() -> testresult::TestResult {
     let ctx = setup().await?;
     bootstrap(&ctx).await?;
 
+    // The backend reads this view to decide how many recipients a DAO's
+    // subaccount can take (a missing method means legacy code).
+    let advertised: u32 = near_api::Contract(ctx.contract_id.clone())
+        .call_function("max_hashes_per_activation", json!({}))
+        .read_only()
+        .fetch_from(&ctx.network)
+        .await?
+        .data;
+    assert_eq!(advertised as usize, MAX_HASHES_PER_ACTIVATION);
+
     let csv = hash_csv(MAX_HASHES_PER_ACTIVATION as u64 + 1);
     let proposal_id = add_and_approve_proposal(&ctx, &csv).await?;
     activate(&ctx, proposal_id).await?;
@@ -696,10 +706,11 @@ async fn assert_multi_ping_signs_all(n: u64) -> testresult::TestResult {
 //     + BYTES_PER_ACTIVATION`.
 
 /// Tuned to the largest batch a single `activate` tx (capped at 300 TGas)
-/// can finish within its forwarded auto-ping budget. With SIGN_GAS=8 +
-/// SIGN_CALLBACK_GAS=5 + SIGN_RESERVE_GAS=5 ≈ 13 TGas per dispatch and
-/// ~150 TGas left after sputnik+on_get_proposal+scheduling, ~9 fits.
-const HASH_COUNT_FOR_METRICS: u64 = 9;
+/// can finish within its forwarded auto-ping budget. With SIGN_GAS=20 +
+/// SIGN_CALLBACK_GAS=5 ≈ 25 TGas reserved per dispatch (plus the
+/// SIGN_RESERVE_GAS=5 floor check) and ~150 TGas left after
+/// sputnik+on_get_proposal+scheduling, 5 dispatch; 4 leaves slack.
+const HASH_COUNT_FOR_METRICS: u64 = 4;
 
 #[tokio::test]
 async fn test_gas_and_storage_metrics() -> testresult::TestResult {

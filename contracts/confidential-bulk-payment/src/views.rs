@@ -1,7 +1,7 @@
 use near_sdk::json_types::U64;
 use near_sdk::{AccountId, near};
 
-use crate::{Activation, BootstrapStatus, Contract, ContractExt};
+use crate::{Activation, BootstrapStatus, Contract, ContractExt, MAX_HASHES_PER_ACTIVATION};
 
 #[near]
 impl Contract {
@@ -23,6 +23,14 @@ impl Contract {
             } => Some(dao_mpc_public_key.clone()),
             _ => None,
         }
+    }
+
+    /// Max recipient hashes one activation accepts. Also serves as a
+    /// capability probe: subaccounts on code from before this method signed
+    /// with too little gas and can only handle small batches, so the backend
+    /// treats "method not found" as the legacy limit.
+    pub fn max_hashes_per_activation(&self) -> u32 {
+        MAX_HASHES_PER_ACTIVATION as u32
     }
 
     pub fn get_bootstrap_status(&self) -> BootstrapStatus {

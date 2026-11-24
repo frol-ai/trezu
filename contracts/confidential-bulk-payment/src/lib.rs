@@ -29,7 +29,12 @@ use crate::sputnik::{ProposalKind, SputnikProposal, ext_sputnik};
 const V1_SIGNER: &str = "v1.signer";
 const INTENTS: &str = "intents.near";
 
-pub const SIGN_GAS: Gas = Gas::from_tgas(8);
+/// Static gas attached to each `v1.signer.sign`. v1.signer rejects calls with
+/// less than 15 TGas prepaid ("Provided gas is lower than required"). The old
+/// 8 TGas only worked when a ping's unused gas, split across its outgoing
+/// calls, topped each sign up past 15, i.e. for small batches; with 64 signs
+/// per ping every one failed. Unused gas is refunded, so headroom is cheap.
+pub const SIGN_GAS: Gas = Gas::from_tgas(20);
 pub const SIGN_CALLBACK_GAS: Gas = Gas::from_tgas(5);
 pub const SIGN_RESERVE_GAS: Gas = Gas::from_tgas(5);
 pub const FETCH_PROPOSAL_GAS: Gas = Gas::from_tgas(5);
@@ -545,7 +550,14 @@ impl Contract {
             let prepaid = env::prepaid_gas();
             let used = env::used_gas();
             let remaining = prepaid.saturating_sub(used);
-            if remaining < SIGN_GAS.saturating_add(SIGN_RESERVE_GAS) {
+            // Each dispatch reserves SIGN_GAS for the sign plus
+            // SIGN_CALLBACK_GAS for `on_sign`, both out of this receipt's
+            // prepaid gas; SIGN_RESERVE_GAS covers this iteration's own cost.
+            if remaining
+                < SIGN_GAS
+                    .saturating_add(SIGN_CALLBACK_GAS)
+                    .saturating_add(SIGN_RESERVE_GAS)
+            {
                 break;
             }
 

@@ -12,11 +12,9 @@ const BACKEND_API_BASE =
 
 // Maximum number of recipients per (public) bulk payment import
 export const MAX_RECIPIENTS_PER_BULK_PAYMENT = 25;
-
-// Maximum number of recipients per confidential bulk payment. Bounded by
-// MAX_HASHES_PER_ACTIVATION in contracts/confidential-bulk-payment; keep in
-// sync with nt-be bulk_payment_prepare.rs.
-export const MAX_RECIPIENTS_PER_CONFIDENTIAL_BULK_PAYMENT = 200;
+// Confidential treasuries get their cap from the backend
+// (`maxRecipients` on the bulk activation status); it depends on the
+// contract code of the DAO's bulk-payment subaccount.
 
 /**
  * Generate a deterministic list_id (SHA-256 hash of canonical JSON)

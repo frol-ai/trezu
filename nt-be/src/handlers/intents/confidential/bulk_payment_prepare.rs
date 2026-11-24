@@ -36,13 +36,45 @@ use crate::handlers::treasury::confidential_setup::derive_bulk_subaccount_id;
 use crate::utils::url::api_url_or_500;
 use crate::{AppState, auth::AuthUser};
 
-/// Must not exceed `MAX_HASHES_PER_ACTIVATION` in
-/// `contracts/confidential-bulk-payment`: the per-DAO subaccount refuses to
-/// load a proposal with more recipient hashes, and deployed subaccounts are
-/// pinned to their code hash, so this can't be raised without a contract
-/// upgrade path. Keep in sync with the FE
-/// `MAX_RECIPIENTS_PER_CONFIDENTIAL_BULK_PAYMENT`.
+/// Upper bound on recipients per confidential bulk payment: the contract's
+/// `MAX_HASHES_PER_ACTIVATION`. The cap for a given DAO is
+/// [`bulk_subaccount_max_recipients`], which can be lower.
 const MAX_RECIPIENTS_PER_BULK_PAYMENT: usize = 200;
+
+/// Cap for subaccounts on legacy contract code (no
+/// `max_hashes_per_activation` view). That code attaches 8 TGas to each
+/// `v1.signer.sign`, below the signer's 15 TGas floor, so a sign only
+/// succeeds when the ping's leftover gas tops it up, which happens for small
+/// batches only. Subaccounts are pinned to their code hash and have no
+/// upgrade path, so these DAOs keep the pre-existing 25 cap.
+const LEGACY_MAX_RECIPIENTS_PER_BULK_PAYMENT: usize = 25;
+
+/// How many recipients this DAO's bulk subaccount can sign for in one bulk
+/// payment, read from its `max_hashes_per_activation` view. Any failure
+/// (method missing on legacy code, account not deployed yet, RPC error)
+/// falls back to the conservative legacy cap.
+pub(crate) async fn bulk_subaccount_max_recipients(
+    state: &Arc<AppState>,
+    sub_id: &AccountId,
+) -> usize {
+    match near_api::Contract(sub_id.clone())
+        .call_function("max_hashes_per_activation", json!({}))
+        .read_only::<u32>()
+        .fetch_from(&state.network)
+        .await
+    {
+        Ok(r) => (r.data as usize).min(MAX_RECIPIENTS_PER_BULK_PAYMENT),
+        Err(e) => {
+            tracing::info!(
+                "{} has no max_hashes_per_activation ({}); using legacy cap {}",
+                sub_id,
+                e,
+                LEGACY_MAX_RECIPIENTS_PER_BULK_PAYMENT
+            );
+            LEGACY_MAX_RECIPIENTS_PER_BULK_PAYMENT
+        }
+    }
+}
 
 /// Max concurrent 1Click quote+generate-intent calls per prepare request.
 /// Matches the old 25-recipient cap, the most this endpoint ever fired in
@@ -430,6 +462,17 @@ pub async fn bulk_payment_prepare(
     let factory_id = state.bulk_payment_contract_id.clone();
     let sub_id = derive_bulk_subaccount_id(&dao_account_id, &factory_id)?;
     let sub_id_str = sub_id.to_string();
+
+    let max_recipients = bulk_subaccount_max_recipients(&state, &sub_id).await;
+    if request.payments.len() > max_recipients {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!(
+                "Maximum number of recipients per bulk payment for this treasury is {}",
+                max_recipients
+            ),
+        ));
+    }
 
     // Both legs go through the confidential 1Click API, but use different
     // signer JWTs: recipient legs are signed by the sub, header by the DAO.

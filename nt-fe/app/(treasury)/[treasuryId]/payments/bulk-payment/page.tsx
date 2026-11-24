@@ -695,6 +695,9 @@ export default function BulkPaymentPage() {
                             treasuryId={selectedTreasury || ""}
                             onContinue={handleContinueFromUpload}
                             isConfidential={isConfidential}
+                            confidentialMaxRecipients={
+                                bulkActivation.maxRecipients
+                            }
                             destinationNetwork={
                                 isConfidential
                                     ? destinationNetworkName

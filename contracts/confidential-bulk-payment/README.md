@@ -60,7 +60,7 @@ External calls (typed proxies in [`mpc.rs`](src/mpc.rs), [`intents.rs`](src/inte
 - Refunds excess deposit to caller (actual storage cost based on real `hashes.len()`).
 
 ### 4. Ping (anyone)
-`ping(proposal_id)` — iterates `Pending` entries while gas budget allows (8 TGas attached + 5 TGas callback + 15 TGas reserve per iter ⇒ ~22 signs per 300 TGas ping):
+`ping(proposal_id)` — iterates `Pending` entries while gas budget allows (20 TGas attached to each `sign` — v1.signer requires ≥ 15 TGas — + 5 TGas callback + 5 TGas reserve per iter ⇒ ~30 signs per 1 PGas ping):
 - Dispatches `v1.signer.sign(request)` with 1-yocto deposit.
 - Marks entry `Signing`.
 - Callback `on_sign` parses `MpcSignResponse::Ed25519 { signature }` → `Signed { signature: [u8; 64] }`. Failure → `SignFailed { reason }`.

@@ -1581,6 +1581,8 @@ export interface BulkActivationStatus {
     status: BulkActivationState;
     bulkAccountId: string;
     pendingPayloadHash?: string;
+    /** Max recipients per bulk payment for this DAO's subaccount. Set when active. */
+    maxRecipients?: number;
 }
 
 export async function getBulkActivationStatus(

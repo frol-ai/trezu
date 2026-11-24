@@ -29,6 +29,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::Arc;
 
+use crate::handlers::intents::confidential::bulk_payment_prepare::bulk_subaccount_max_recipients;
 use crate::handlers::intents::confidential::prepare_auth::build_bulk_payment_auth_proposal;
 use crate::handlers::relay::confidential::compute_nep413_hash;
 use crate::handlers::treasury::confidential_setup::{
@@ -63,6 +64,10 @@ pub struct BulkActivationStatus {
     /// `v1.signer` FunctionCall args — the FE uses it to find the proposal.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pending_payload_hash: Option<String>,
+    /// Max recipients per bulk payment for this DAO's subaccount (depends on
+    /// its contract code). Only set when `Active`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_recipients: Option<usize>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -179,14 +184,16 @@ pub async fn get_bulk_activation_status(
     auth_user
         .verify_member_if_confidential(&state.db_pool, &dao_id)
         .await?;
-    let bulk_account_id =
-        derive_bulk_subaccount_id(&dao_id, &state.bulk_payment_contract_id)?.to_string();
+    let bulk_account = derive_bulk_subaccount_id(&dao_id, &state.bulk_payment_contract_id)?;
+    let bulk_account_id = bulk_account.to_string();
 
     if load_bulk_token_state(&state, dao_id.as_str()).await? {
+        let max_recipients = bulk_subaccount_max_recipients(&state, &bulk_account).await;
         return Ok(Json(BulkActivationStatus {
             status: BulkActivationState::Active,
             bulk_account_id,
             pending_payload_hash: None,
+            max_recipients: Some(max_recipients),
         }));
     }
 
@@ -233,6 +240,7 @@ pub async fn get_bulk_activation_status(
         status,
         bulk_account_id,
         pending_payload_hash,
+        max_recipients: None,
     }))
 }
 

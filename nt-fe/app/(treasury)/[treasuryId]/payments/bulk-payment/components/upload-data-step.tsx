@@ -30,10 +30,7 @@ import {
 import { useSubscription } from "@/hooks/use-subscription";
 import { isTrialPlan } from "@/lib/subscription-api";
 import { BulkPaymentCreditsDisplay } from "./bulk-payment-credits-display";
-import {
-    MAX_RECIPIENTS_PER_BULK_PAYMENT,
-    MAX_RECIPIENTS_PER_CONFIDENTIAL_BULK_PAYMENT,
-} from "@/lib/bulk-payment-api";
+import { MAX_RECIPIENTS_PER_BULK_PAYMENT } from "@/lib/bulk-payment-api";
 import type { BulkPaymentFormValues, BulkPaymentData } from "../schemas";
 import {
     Tabs,
@@ -59,6 +56,9 @@ interface UploadDataStepProps {
     /** When true, restrict token picker to Intents tokens and skip credit
      * gating (confidential bulk has its own backend cost model). */
     isConfidential?: boolean;
+    /** Recipient cap for confidential bulk, from the backend (depends on the
+     * DAO's bulk-payment subaccount). Falls back to the public cap. */
+    confidentialMaxRecipients?: number;
     /** Slot rendered above the token select — used by confidential bulk to
      * surface the destination network picker. */
     networkSlot?: React.ReactNode;
@@ -83,6 +83,7 @@ export function UploadDataStep({
     treasuryId,
     onContinue,
     isConfidential = false,
+    confidentialMaxRecipients,
     networkSlot,
     destinationNetwork,
     destinationNetworkId,
@@ -91,9 +92,9 @@ export function UploadDataStep({
     const t = useTranslations("bulkPayment.upload");
     const tCreate = useTranslations("createRequestButton");
     const parsingLabels = useBulkParsingLabels();
-    const maxRecipients = isConfidential
-        ? MAX_RECIPIENTS_PER_CONFIDENTIAL_BULK_PAYMENT
-        : MAX_RECIPIENTS_PER_BULK_PAYMENT;
+    const maxRecipients =
+        (isConfidential && confidentialMaxRecipients) ||
+        MAX_RECIPIENTS_PER_BULK_PAYMENT;
     const form = useFormContext<BulkPaymentFormValues>();
     const { data: subscription, isLoading: isLoadingSubscription } =
         useSubscription(treasuryId);

@@ -43,6 +43,7 @@ export function useBulkActivation() {
         status: statusQuery.data?.status,
         bulkAccountId: statusQuery.data?.bulkAccountId,
         pendingPayloadHash: statusQuery.data?.pendingPayloadHash,
+        maxRecipients: statusQuery.data?.maxRecipients,
         isLoading: statusQuery.isLoading,
         isError: statusQuery.isError,
         isActive: statusQuery.data?.status === "active",

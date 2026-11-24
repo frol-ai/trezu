@@ -57,6 +57,11 @@ impl MockMpc {
             env::attached_deposit() == NearToken::from_yoctonear(1),
             "mock v1.signer.sign: must attach exactly 1 yoctoNEAR"
         );
+        // Mirror the real v1.signer gas floor so tests catch underfunded signs.
+        require!(
+            env::prepaid_gas() >= near_sdk::Gas::from_tgas(15),
+            "Provided gas is lower than required"
+        );
         let payload = match request.payload_v2 {
             PayloadV2::Eddsa(s) => s,
         };

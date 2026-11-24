@@ -1,8 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-    MAX_RECIPIENTS_PER_BULK_PAYMENT,
-    MAX_RECIPIENTS_PER_CONFIDENTIAL_BULK_PAYMENT,
-} from "@/lib/bulk-payment-api";
+import { MAX_RECIPIENTS_PER_BULK_PAYMENT } from "@/lib/bulk-payment-api";
 import type { BulkParsingLabels } from "./parsing";
 import { parseAmount, parseAndValidateCsv } from "./parsing";
 
@@ -153,6 +150,8 @@ describe("parseAndValidateCsv destination network", () => {
 });
 
 describe("parseAndValidateCsv recipient limit", () => {
+    // Confidential caps come from the backend; 200 is the contract max.
+    const MAX_RECIPIENTS_PER_CONFIDENTIAL_BULK_PAYMENT = 200;
     const token = { symbol: "USDC", network: "near", residency: "intents" };
     const csvWithRecipients = (n: number) =>
         [
@@ -178,7 +177,7 @@ describe("parseAndValidateCsv recipient limit", () => {
         expect(overCap.errors).toHaveLength(1);
     });
 
-    it("accepts up to the confidential cap when passed", () => {
+    it("accepts up to a larger cap when passed", () => {
         const result = parseAndValidateCsv(
             csvWithRecipients(MAX_RECIPIENTS_PER_CONFIDENTIAL_BULK_PAYMENT),
             parsingLabels,
@@ -193,7 +192,7 @@ describe("parseAndValidateCsv recipient limit", () => {
         );
     });
 
-    it("rejects one over the confidential cap", () => {
+    it("rejects one over a larger cap", () => {
         const result = parseAndValidateCsv(
             csvWithRecipients(MAX_RECIPIENTS_PER_CONFIDENTIAL_BULK_PAYMENT + 1),
             parsingLabels,
